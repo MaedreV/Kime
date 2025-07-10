@@ -7,13 +7,17 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -36,16 +40,8 @@ fun KataDetalheScreen(
                     IconButton(onClick = { navController.navigateUp() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Voltar")
                     }
-                },
-                actions = {
-                    IconButton(onClick = { favorito = !favorito }) {
-                        Icon(
-                            Icons.Default.Favorite,
-                            contentDescription = "Favorito",
-                            tint = if (favorito) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-                        )
-                    }
                 }
+
             )
         }
     ) { padding ->
@@ -57,8 +53,14 @@ fun KataDetalheScreen(
             // Banner de imagem (placeholder)
             item {
                 Image(
-                    painter = painterResource(id = R.drawable.ic_launcher_background),
-                    contentDescription = null,
+                    painter = painterResource(
+                        id = when (tecnica.id) {
+                            "kata1" -> R.drawable.heian_nida
+                            "kata2" -> R.drawable.heian_nida
+                            else -> R.drawable.heian_nida
+                        }
+                    ),
+                    contentDescription = tecnica.titulo,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(200.dp),
@@ -83,7 +85,14 @@ fun KataDetalheScreen(
                     modifier = Modifier.padding(start = 16.dp)
                 )
             }
-            itemsIndexed(listOf("Posição Inicial", "Gedan Barai", "Oi-zuki", "Age-uke")) { index, passo ->
+            itemsIndexed(
+                listOf(
+                    "Posição Inicial",
+                    "Gedan Barai",
+                    "Oi-zuki",
+                    "Age-uke"
+                )
+            ) { index, passo ->
                 var aberto by remember { mutableStateOf(false) }
                 Card(
                     Modifier
@@ -105,11 +114,15 @@ fun KataDetalheScreen(
                         }
                         if (aberto) {
                             Spacer(Modifier.height(8.dp))
-                            Text("Descrição detalhada do passo $passo", style = MaterialTheme.typography.bodySmall)
+                            Text(
+                                "Descrição detalhada do passo $passo",
+                                style = MaterialTheme.typography.bodySmall
+                            )
                         }
                     }
                 }
             }
+            // Vídeo de demonstração (placeholder)
             // Vídeo de demonstração (placeholder)
             item {
                 Spacer(Modifier.height(16.dp))
@@ -121,15 +134,26 @@ fun KataDetalheScreen(
                         .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)),
                     contentAlignment = Alignment.Center
                 ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.heian_nida),
+                        contentDescription = "Placeholder de vídeo",
+                        modifier = Modifier
+                            .size(128.dp) // ou outro tamanho que quiser
+                            .clip(RoundedCornerShape(8.dp)),
+                        contentScale = ContentScale.Crop
+                    )
+                    // Se quiser sobrepor um ícone de “play”:
                     Icon(
-                        painter = painterResource(id = R.drawable.ic_launcher_foreground ),
+                        imageVector = Icons.Default.PlayArrow,
                         contentDescription = "Reproduzir vídeo",
-                        modifier = Modifier.size(64.dp),
-                        tint = MaterialTheme.colorScheme.primary
+                        modifier = Modifier.size(48.dp),
+                        tint = Color.White.copy(alpha = 0.8f)
                     )
                 }
             }
         }
     }
 }
+
+
 

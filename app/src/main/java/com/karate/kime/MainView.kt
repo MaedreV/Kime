@@ -19,7 +19,7 @@ class MainViewModel : ViewModel() {
 
         Tecnica("kihon1", "Oi-Zuki",   "Golpe de punho básico, projeção frontal.", "VIDEO_ID_OI_ZUKI"),
         Tecnica("kihon2", "Gedan Barai","Bloqueio baixo em zenkutsu‑dachi.",       "VIDEO_ID_GEDAN"),
-        Tecnica("kihon3", "Age‑Uke",   "Bloqueio ascendente para defender ataques de cima.", "VIDEO_ID_AGE_UKE"),
+        Tecnica("kihon3", "Age-Uke",   "Bloqueio ascendente para defender ataques de cima.", "VIDEO_ID_AGE_UKE"),
         Tecnica("kihon4", "Uchi‑Uke",  "Bloqueio interno para defender socos laterais.",   "VIDEO_ID_UCHI_UKE"),
         Tecnica("kihon5", "Soto‑Uke",  "Bloqueio externo para desvios laterais.",            "VIDEO_ID_SOTO_UKE"),
     )
@@ -38,7 +38,7 @@ class MainViewModel : ViewModel() {
             faixaId = "verde",
             nome    = "Faixa Verde",
             cor     = Color.Green,
-            kihon   = listOf("Gyaku-Zuki", "Age-Uke", "Uchi-Uke", "Soto-Uke"),
+            kihon   = listOf("Oi-Zuki", "Gedan Barai","Gyaku-Zuki", "Age-Uke", "Uchi‑Uke", "Soto‑Uke"),
             kata    = listOf("Heian Nidan", "Heian Sandan", "Heian Yondan"),
          //   kumite  = listOf("Sanbon Kumite")
         )

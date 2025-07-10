@@ -3,12 +3,15 @@ package com.karate.kime.screens
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -41,11 +44,21 @@ fun KihonDetalheScreen(
         ) {
             // Foto do golpe
             Image(
-                painter = painterResource(id = R.drawable.ic_launcher_background),
-                contentDescription = null,
+                painter = painterResource(
+                    id = when (tecnica.id) {
+                        "kihon1" -> R.drawable.age_uke
+                        "kihon2" -> R.drawable.age_uke
+                        "kihon3" -> R.drawable.age_uke
+                        "kihon4" -> R.drawable.age_uke
+                        "kihon5" -> R.drawable.age_uke
+                        else     -> R.drawable.age_uke
+                    }
+                ),
+                contentDescription = tecnica.titulo,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(200.dp),
+                    .height(200.dp)
+                    .clip(RoundedCornerShape(8.dp)),
                 contentScale = ContentScale.Crop
             )
 
@@ -60,7 +73,7 @@ fun KihonDetalheScreen(
 
             Spacer(Modifier.height(24.dp))
 
-            // Vídeo
+            // Vídeo de demonstração (placeholder)
             Box(
                 Modifier
                     .fillMaxWidth()
@@ -69,10 +82,27 @@ fun KihonDetalheScreen(
                     .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)),
                 contentAlignment = Alignment.Center
             ) {
+                Image(
+                    painter = painterResource(
+                        id = when (tecnica.id) {
+                            "kihon1" -> R.drawable.age_uke
+                            "kihon2" -> R.drawable.age_uke
+                            "kihon3" -> R.drawable.age_uke
+                            "kihon4" -> R.drawable.age_uke
+                            "kihon5" -> R.drawable.age_uke
+                            else     -> R.drawable.age_uke
+                        }
+                    ),
+                    contentDescription = "Vídeo de demonstração",
+                    modifier = Modifier
+                        .size(128.dp)
+                        .clip(RoundedCornerShape(8.dp)),
+                    contentScale = ContentScale.Crop
+                )
                 Icon(
-                    painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                    imageVector = Icons.Default.PlayArrow,
                     contentDescription = "Reproduzir vídeo",
-                    modifier = Modifier.size(64.dp),
+                    modifier = Modifier.size(48.dp),
                     tint = MaterialTheme.colorScheme.primary
                 )
             }

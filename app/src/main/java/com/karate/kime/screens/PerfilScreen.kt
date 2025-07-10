@@ -11,6 +11,6 @@ import com.karate.kime.MainViewModel
 @Composable
 fun PerfilScreen(vm: MainViewModel) {
     Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.Center) {
-        Text("Área do Usuário (em construção)", style = MaterialTheme.typography.titleMedium)
+        Text("Área do Usuário", style = MaterialTheme.typography.titleMedium)
     }
 }

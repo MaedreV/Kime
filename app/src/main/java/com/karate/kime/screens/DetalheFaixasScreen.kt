@@ -91,7 +91,7 @@ fun DetalheFaixasScreen(
                     Row(
                         Modifier
                             .fillMaxWidth()
-                            .clickable { navController.navigate("golpe/detalhe/$golpe") }
+                            .clickable { navController.navigate("kihon/detalhe/$golpe") }
                             .padding(vertical = 12.dp, horizontal = 16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
