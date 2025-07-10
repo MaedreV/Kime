@@ -32,7 +32,7 @@ class MainViewModel : ViewModel() {
             cor     = Color.White,
             kihon   = listOf("Oi-Zuki", "Gedan Barai"),
             kata    = listOf("Heian Shodan"),
-            kumite  = listOf("Ippon Kumite Básico")
+          //  kumite  = listOf("Ippon Kumite Básico")
         ),
         RequisitosExame(
             faixaId = "verde",
@@ -40,7 +40,7 @@ class MainViewModel : ViewModel() {
             cor     = Color.Green,
             kihon   = listOf("Gyaku-Zuki", "Age-Uke", "Uchi-Uke", "Soto-Uke"),
             kata    = listOf("Heian Nidan", "Heian Sandan", "Heian Yondan"),
-            kumite  = listOf("Sanbon Kumite")
+         //   kumite  = listOf("Sanbon Kumite")
         )
         // …adicione as demais faixas aqui…
     ).associateBy { it.faixaId }

@@ -14,6 +14,5 @@ val bottomNavItems = listOf(
     BottomNavItem("Home", Icons.Default.Home, Rota.Home),
   //  BottomNavItem("Glossário", Icons.Default.Info, Rota.Glossario),
     BottomNavItem("Exames", Icons.Default.DateRange, Rota.Exames),
-  //  BottomNavItem("História", Icons.Default.AccountBox, Rota.Historia),
     BottomNavItem("Perfil", Icons.Default.Person, Rota.Perfil),
 )

@@ -8,5 +8,5 @@ fun ProgressSection(
     activeFilter: String?,
     setActiveFilter: (String) -> Unit
 ) {
-    // ... seu código existente do ProgressSection
+    //
 }

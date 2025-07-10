@@ -29,22 +29,22 @@ fun ExamesScreen(vm: MainViewModel, nav: NavHostController) {
         Faixa("branca",   "Faixa Branca",   Color.White),
         Faixa("amarela",  "Faixa Amarela",  Color.Yellow),
         Faixa("vermelha", "Faixa Vermelha", Color.Red),
-        Faixa("laranja",  "Faixa Laranja",  Color(0xFFFFA500)),
+        Faixa("laranja",  "Faixa Laranja",  Color(0xFFF3720D)),
         Faixa("verde",    "Faixa Verde",    Color.Green),
-        Faixa("roxa",     "Faixa Roxa",     Color(0xFF800080)),
+        Faixa("roxa",     "Faixa Roxa",     Color(0xFF7F0C7F)),
         Faixa("marrom",   "Faixa Marrom",   Color(0xFF654321)),
-        Faixa("preta",    "Faixa Preta",    Color.Black),
+        Faixa("preta",    "Faixa Preta",    Color(0xFF0B0703)),
     )
 
     Scaffold(
-        floatingActionButton = {
+        /*floatingActionButton = {
             FloatingActionButton(onClick = {
-                // Exemplo de agendamento automático: exam in 30 days for faixa amarela
+                // agendado exame da amarela
                 vm.agendarExame(LocalDate.now().plusDays(30), "amarela")
             }) {
                 Icon(Icons.Default.Add, contentDescription = "Agendar exame")
             }
-        },
+        },*/
         bottomBar = { BottomNavBar(nav) }
     ) { padding ->
         LazyColumn(
@@ -53,7 +53,7 @@ fun ExamesScreen(vm: MainViewModel, nav: NavHostController) {
                 .padding(16.dp)
         ) {
             // Se não há exames agendados
-            if (exames.isEmpty()) {
+            /*if (exames.isEmpty()) {
                 item {
                     Text(
                         "Você ainda não agendou nenhum exame.",
@@ -64,7 +64,7 @@ fun ExamesScreen(vm: MainViewModel, nav: NavHostController) {
                 item { Spacer(Modifier.height(24.dp)) }
                 item {
                     Text(
-                        "Selecione uma faixa para agendar:",
+                        "Selecione uma faixa",
                         style = MaterialTheme.typography.titleMedium
                     )
                 }
@@ -75,7 +75,7 @@ fun ExamesScreen(vm: MainViewModel, nav: NavHostController) {
                         Modifier
                             .fillMaxWidth()
                             .padding(vertical = 4.dp)
-                            .clickable { /* navegar ao detalhe do exame, se existir */ },
+                            .clickable { },
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                     ) {
                         Column(Modifier.padding(16.dp)) {
@@ -92,7 +92,7 @@ fun ExamesScreen(vm: MainViewModel, nav: NavHostController) {
                         style = MaterialTheme.typography.titleMedium
                     )
                 }
-            }
+            }*/
 
             // Lista de faixas com cor de fundo
             items(faixas) { faixa ->
@@ -104,7 +104,7 @@ fun ExamesScreen(vm: MainViewModel, nav: NavHostController) {
                             nav.navigate("exames/faixa/${faixa.id}")
                         },
                     colors = CardDefaults.cardColors(
-                        containerColor = faixa.cor.copy(alpha = 0.2f)
+                        containerColor = faixa.cor.copy(alpha = 0.5f)
                     )
                 ) {
                     Row(
