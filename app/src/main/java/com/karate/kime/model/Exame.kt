@@ -7,9 +7,6 @@ enum class StatusExame { PENDENTE, CONCLUIDO }
 data class Exame(
     val id: String,
     val data: LocalDate,
-    val faixa: String,
-    val requisitosKihon: List<String>,
-    val requisitosKata: List<String>,
-    val requisitosKumite: List<String>,
+    val faixaId: String,                // id interno, ex: "verde"
     var status: StatusExame = StatusExame.PENDENTE
 )

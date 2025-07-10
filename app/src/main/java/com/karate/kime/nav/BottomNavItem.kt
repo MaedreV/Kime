@@ -11,9 +11,9 @@ data class BottomNavItem(
 )
 
 val bottomNavItems = listOf(
-    BottomNavItem("Biblioteca", Icons.Default.Home, Rota.Biblioteca),
-    BottomNavItem("Glossário", Icons.Default.Info, Rota.Glossario),
+    BottomNavItem("Home", Icons.Default.Home, Rota.Home),
+  //  BottomNavItem("Glossário", Icons.Default.Info, Rota.Glossario),
     BottomNavItem("Exames", Icons.Default.DateRange, Rota.Exames),
-    BottomNavItem("História", Icons.Default.AccountBox, Rota.Historia),
+  //  BottomNavItem("História", Icons.Default.AccountBox, Rota.Historia),
     BottomNavItem("Perfil", Icons.Default.Person, Rota.Perfil),
 )
