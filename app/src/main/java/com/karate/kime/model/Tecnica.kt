@@ -1,8 +1,10 @@
 package com.karate.kime.model
 
+
 data class Tecnica(
-    val id: String,
-    val titulo: String,
-    val descricao: String,
-    val videoUrl: String
+    val id: String = "",
+    val titulo: String = "",
+    val descricao: String = "",
+    val imageUrl: String? = null,
+    val videoUrl: String = ""
 )

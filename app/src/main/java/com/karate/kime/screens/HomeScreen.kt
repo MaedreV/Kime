@@ -21,11 +21,11 @@ fun HomeScreen(
     vm: MainViewModel,
     nav: NavHostController
 ) {
-    // Aqui você pode buscar progresso e data do próximo exame do ViewModel:
+
     val diasParaExame = 14
     val progressoKihon = 0.6f
     val progressoKata  = 0.3f
-    val progressoKumite= 0.4f
+ //   val progressoKumite= 0.4f
 
     Column(
         modifier = Modifier
@@ -33,7 +33,7 @@ fun HomeScreen(
             .background(MaterialTheme.colorScheme.background)
             .padding(16.dp)
     ) {
-        // 1) Card Dica do Dia
+        // card da dica
         Card(
             shape = MaterialTheme.shapes.medium,
             elevation = CardDefaults.cardElevation(4.dp),
@@ -60,14 +60,14 @@ fun HomeScreen(
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier
                         .align(Alignment.End)
-                        .clickable { /* abre modal de dica completa */ }
+                        .clickable { /* abrir modal da dica mais tarde */ }
                 )
             }
         }
 
         Spacer(Modifier.height(24.dp))
 
-        // 2) Progresso Geral
+        // progresso geral
         Text(
             text = "Progresso Geral",
             style = MaterialTheme.typography.titleMedium,
@@ -75,7 +75,7 @@ fun HomeScreen(
         )
         Spacer(Modifier.height(8.dp))
 
-        // Função helper inline para cada barra:
+        // linha de progresso
         @Composable
         fun ProgressoLinha(progress: Float, label: String) {
             Row(
@@ -100,11 +100,11 @@ fun HomeScreen(
         Spacer(Modifier.height(8.dp))
         ProgressoLinha(progressoKata, "Kata")
         Spacer(Modifier.height(8.dp))
-        ProgressoLinha(progressoKumite, "Kumite")
+       // ProgressoLinha(progressoKumite, "Kumite")
 
         Spacer(Modifier.height(24.dp))
 
-        // 3) Próximo Exame
+        // prox exame se agendado
         Card(
             shape = MaterialTheme.shapes.medium,
             elevation = CardDefaults.cardElevation(2.dp),

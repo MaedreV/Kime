@@ -1,71 +1,102 @@
 package com.karate.kime
 
+import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
-import com.karate.kime.model.Exame
+import androidx.lifecycle.viewModelScope
+import com.karate.kime.data.FirestoreRepo
+import com.karate.kime.data.youtube.Snippet
+import com.karate.kime.data.youtube.YouTubeClient
 import com.karate.kime.model.RequisitosExame
-import com.karate.kime.model.StatusExame
 import com.karate.kime.model.Tecnica
-import java.time.LocalDate
-import java.util.*
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+
+private const val TAG = "MainViewModel"
 
 class MainViewModel : ViewModel() {
-    // 0) Lista simulada de técnicas (para detalhes de kata/golpe)
-    private val _tecnicas = mutableStateListOf(
-        Tecnica("kata1", "Heian Shodan", "Primeiro kata da série Heian.", "VIDEO_ID_1"),
-        Tecnica("kata2", "Heian Nidan",  "Segundo kata da série Heian.",   "VIDEO_ID_2"),
-        // ... adicione mais conforme desejar
 
-        Tecnica("kihon1", "Oi-Zuki",   "Golpe de punho básico, projeção frontal.", "VIDEO_ID_OI_ZUKI"),
-        Tecnica("kihon2", "Gedan Barai","Bloqueio baixo em zenkutsu‑dachi.",       "VIDEO_ID_GEDAN"),
-        Tecnica("kihon3", "Age-Uke",   "Bloqueio ascendente para defender ataques de cima.", "VIDEO_ID_AGE_UKE"),
-        Tecnica("kihon4", "Uchi‑Uke",  "Bloqueio interno para defender socos laterais.",   "VIDEO_ID_UCHI_UKE"),
-        Tecnica("kihon5", "Soto‑Uke",  "Bloqueio externo para desvios laterais.",            "VIDEO_ID_SOTO_UKE"),
-    )
+    // Técnicas
+    private val _tecnicas = mutableStateListOf<Tecnica>()
     val tecnicas: List<Tecnica> get() = _tecnicas
-    // 1) Map de requisitos padronizados para cada faixa
-    private val requisitosMap = listOf(
-        RequisitosExame(
-            faixaId = "branca",
-            nome    = "Faixa Branca",
-            cor     = Color.White,
-            kihon   = listOf("Oi-Zuki", "Gedan Barai"),
-            kata    = listOf("Heian Shodan"),
-          //  kumite  = listOf("Ippon Kumite Básico")
-        ),
-        RequisitosExame(
-            faixaId = "verde",
-            nome    = "Faixa Verde",
-            cor     = Color.Green,
-            kihon   = listOf("Oi-Zuki", "Gedan Barai","Gyaku-Zuki", "Age-Uke", "Uchi‑Uke", "Soto‑Uke"),
-            kata    = listOf("Heian Nidan", "Heian Sandan", "Heian Yondan"),
-         //   kumite  = listOf("Sanbon Kumite")
-        )
-        // …adicione as demais faixas aqui…
-    ).associateBy { it.faixaId }
 
-    // 2) Lista simulada de exames agendados
-    private val _exames = mutableStateListOf<Exame>()
-    val exames: List<Exame> get() = _exames
+    // YouTube
+    private val ytService = YouTubeClient.create()
+    private val apiKey = BuildConfig.YOUTUBE_API_KEY
 
-    /** Agendar um exame */
-    fun agendarExame(data: LocalDate, faixaId: String) {
-        val exame = Exame(
-            id    = UUID.randomUUID().toString(),
-            data  = data,
-            faixaId = faixaId,
-            status = StatusExame.PENDENTE
-        )
-        _exames.add(exame)
+    // Requisitos por faixa
+    private val _requisitos = MutableStateFlow<Map<String, RequisitosExame>>(emptyMap())
+    val requisitos: StateFlow<Map<String, RequisitosExame>> = _requisitos.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            try {
+                val list = FirestoreRepo.fetchTecnicas()
+                _tecnicas.clear()
+                _tecnicas.addAll(list)
+                Log.d(TAG, "Técnicas carregadas: ${_tecnicas.size}")
+                _tecnicas.forEach { t -> Log.d(TAG, "tec loaded -> id=${t.id} titulo='${t.titulo}' videoUrl='${t.videoUrl}'") }
+            } catch (e: Exception) {
+                Log.e(TAG, "Erro ao carregar tecnicas: ${e.message}", e)
+            }
+        }
+
+        viewModelScope.launch {
+            try {
+                val map = FirestoreRepo.fetchRequisitos()
+                _requisitos.value = map
+                Log.d(TAG, "Requisitos carregados: ${map.keys}")
+            } catch (e: Exception) {
+                Log.e(TAG, "Erro ao carregar requisitos: ${e.message}", e)
+            }
+        }
     }
 
-    /** Marcar um exame como concluído */
-    fun concluirExame(id: String) {
-        _exames.find { it.id == id }?.status = StatusExame.CONCLUIDO
+    fun getRequisitos(faixaId: String): RequisitosExame? = _requisitos.value[faixaId]
+
+    fun updateRequisitos(requisitosExame: RequisitosExame) {
+        val copy = _requisitos.value.toMutableMap()
+        copy[requisitosExame.faixaId] = requisitosExame
+        _requisitos.value = copy
     }
 
-    /** Retorna os requisitos para a faixa escolhida, ou null */
-    fun getRequisitos(faixaId: String): RequisitosExame? =
-        requisitosMap[faixaId.lowercase()]
+    // busca snippet do youtube
+    suspend fun fetchVideoSnippet(videoId: String): Snippet? {
+        if (videoId.isBlank()) return null
+        return try {
+            val resp = ytService.getVideos(id = videoId, key = apiKey)
+            if (resp.items.isNotEmpty()) resp.items[0].snippet else null
+        } catch (e: Exception) {
+            Log.e(TAG, "Erro YouTube API: ${e.message}", e)
+            null
+        }
+    }
+
+
+    suspend fun fetchTecnicaById(id: String): Tecnica? {
+        try {
+            val t = FirestoreRepo.fetchTecnicaById(id)
+            if (t != null) {
+                // atualiza lista no main thread via scope
+                viewModelScope.launch {
+                    val idx = _tecnicas.indexOfFirst { it.id == t.id }
+                    if (idx >= 0) {
+                        _tecnicas[idx] = t
+                        Log.d(TAG, "fetchTecnicaById: substituiu técnica index=$idx id=${t.id} videoUrl='${t.videoUrl}'")
+                    } else {
+                        _tecnicas.add(t)
+                        Log.d(TAG, "fetchTecnicaById: adicionou técnica id=${t.id} videoUrl='${t.videoUrl}'")
+                    }
+                }
+            } else {
+                Log.w(TAG, "fetchTecnicaById: técnica $id não encontrada no Firestore")
+            }
+            return t
+        } catch (e: Exception) {
+            Log.e(TAG, "Erro fetchTecnicaById: ${e.message}", e)
+            return null
+        }
+    }
 }

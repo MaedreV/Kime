@@ -1,7 +1,10 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.google.gms.google.services)
 }
 
 android {
@@ -14,7 +17,15 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
+// lê do local.properties:
+        val props = Properties().apply {
+            load(rootProject.file("local.properties").inputStream())
+        }
+        val ytKey = props.getProperty("YOUTUBE_API_KEY")
+            ?: error("YOUTUBE_API_KEY não está definido em local.properties")
 
+        // ② Adiciona ao BuildConfig
+        buildConfigField("String", "YOUTUBE_API_KEY", "\"$ytKey\"")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -35,6 +46,8 @@ android {
         jvmTarget = "11"
     }
     buildFeatures {
+        buildConfig = true
+
         compose = true
     }
 }
@@ -53,6 +66,7 @@ dependencies {
     implementation(libs.androidx.foundation.android)
     implementation(libs.androidx.foundation.android)
     implementation(libs.androidx.foundation.android)
+    implementation(libs.firebase.firestore)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -64,5 +78,17 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.0")
     implementation("androidx.compose.material:material-icons-extended")
+    implementation ("io.coil-kt:coil-compose:2.2.2")
+    // Retrofit + Moshi
+    implementation ("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation ("com.squareup.retrofit2:converter-moshi:2.9.0")
+    implementation ("com.squareup.okhttp3:logging-interceptor:4.9.3")
+    implementation ("com.squareup.moshi:moshi-kotlin:1.14.0")
+    dependencies {
+        implementation ("com.pierfrancescosoffritti.androidyoutubeplayer:core:11.1.0")
+    }
+
+
+
 
 }

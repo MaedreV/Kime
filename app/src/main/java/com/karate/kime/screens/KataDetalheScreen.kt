@@ -1,159 +1,122 @@
 package com.karate.kime.screens
 
-
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.runtime.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import com.karate.kime.R
-import com.karate.kime.model.Tecnica
+import com.karate.kime.MainViewModel
+import com.karate.kime.data.youtube.Snippet
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun KataDetalheScreen(
-    tecnica: Tecnica,
+    titulo: String,
+    vm: MainViewModel,
     navController: NavHostController
 ) {
-    var favorito by remember { mutableStateOf(false) }
+    val tecnicas = vm.tecnicas
+    val tec = remember(titulo, tecnicas) {
+        tecnicas.find { it.titulo == titulo }
+    } ?: run {
+        Text("Kata não encontrado", Modifier.padding(16.dp))
+        return
+    }
+
+    val videoId = tec.videoUrl
+
+    val snippetState = produceState<Snippet?>(initialValue = null, videoId) {
+        value = vm.fetchVideoSnippet(videoId!!)
+    }
+
+    val context = LocalContext.current
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(tecnica.titulo) },
+                title = { Text(tec.titulo) },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Voltar")
                     }
                 }
-
             )
         }
-    ) { padding ->
-        LazyColumn(
+    ) { innerPadding ->
+        Column(
             Modifier
-                .fillMaxSize()
-                .padding(padding)
+                .verticalScroll(rememberScrollState())
+                .padding(innerPadding)
         ) {
-            // Banner de imagem (placeholder)
-            item {
-                Image(
-                    painter = painterResource(
-                        id = when (tecnica.id) {
-                            "kata1" -> R.drawable.heian_nida
-                            "kata2" -> R.drawable.heian_nida
-                            else -> R.drawable.heian_nida
-                        }
-                    ),
-                    contentDescription = tecnica.titulo,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp),
-                    contentScale = ContentScale.Crop
-                )
-            }
-            // Descrição
-            item {
-                Spacer(Modifier.height(16.dp))
-                Text(
-                    tecnica.descricao,
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(horizontal = 16.dp)
-                )
-            }
-            // Sequência de Movimentos
-            item {
-                Spacer(Modifier.height(16.dp))
-                Text(
-                    "Sequência de Movimentos",
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(start = 16.dp)
-                )
-            }
-            itemsIndexed(
-                listOf(
-                    "Posição Inicial",
-                    "Gedan Barai",
-                    "Oi-zuki",
-                    "Age-uke"
-                )
-            ) { index, passo ->
-                var aberto by remember { mutableStateOf(false) }
-                Card(
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                        .clickable { aberto = !aberto },
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            Spacer(Modifier.height(12.dp))
+
+            YouTubeWebPlayer(
+                videoId = videoId!!,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(220.dp)
+                    .padding(horizontal = 16.dp)
+            )
+
+            Spacer(Modifier.height(12.dp))
+
+            Text(
+                text = snippetState.value?.title ?: tec.titulo,
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+
+            Spacer(Modifier.height(8.dp))
+
+            Text(
+                text = snippetState.value?.description ?: tec.descricao,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+
+            Spacer(Modifier.height(18.dp))
+
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedButton(
+                    onClick = { if (videoId!!.isNotBlank()) openYoutube(context, videoId) },
+                    modifier = Modifier.weight(1f)
                 ) {
-                    Column(Modifier.padding(12.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                "${index + 1}. ",
-                                style = MaterialTheme.typography.bodyLarge
-                            )
-                            Text(
-                                passo,
-                                style = MaterialTheme.typography.bodyLarge
-                            )
-                        }
-                        if (aberto) {
-                            Spacer(Modifier.height(8.dp))
-                            Text(
-                                "Descrição detalhada do passo $passo",
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                        }
-                    }
+                    Icon(Icons.Default.PlayArrow, contentDescription = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text("Abrir no YouTube")
                 }
             }
-            // Vídeo de demonstração (placeholder)
-            // Vídeo de demonstração (placeholder)
-            item {
-                Spacer(Modifier.height(16.dp))
-                Box(
-                    Modifier
-                        .fillMaxWidth()
-                        .height(200.dp)
-                        .padding(16.dp)
-                        .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.heian_nida),
-                        contentDescription = "Placeholder de vídeo",
-                        modifier = Modifier
-                            .size(128.dp) // ou outro tamanho que quiser
-                            .clip(RoundedCornerShape(8.dp)),
-                        contentScale = ContentScale.Crop
-                    )
-                    // Se quiser sobrepor um ícone de “play”:
-                    Icon(
-                        imageVector = Icons.Default.PlayArrow,
-                        contentDescription = "Reproduzir vídeo",
-                        modifier = Modifier.size(48.dp),
-                        tint = Color.White.copy(alpha = 0.8f)
-                    )
-                }
-            }
+
+            Spacer(Modifier.height(32.dp))
         }
     }
 }
 
-
-
+private fun openYoutube(context: android.content.Context, videoId: String) {
+    if (videoId.isBlank()) return
+    val appIntent = Intent(Intent.ACTION_VIEW, Uri.parse("vnd.youtube:$videoId"))
+    val webIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.youtube.com/watch?v=$videoId"))
+    try {
+        context.startActivity(appIntent)
+    } catch (ex: ActivityNotFoundException) {
+        context.startActivity(webIntent)
+    }
+}
