@@ -1,3 +1,4 @@
+// app/src/main/java/com/karate/kime/MainViewModel.kt
 package com.karate.kime
 
 import android.util.Log
@@ -26,7 +27,6 @@ class MainViewModel : ViewModel() {
     private val ytService = YouTubeClient.create()
     private val apiKey = BuildConfig.YOUTUBE_API_KEY
 
-    // Requisitos por faixa
     private val _requisitos = MutableStateFlow<Map<String, RequisitosExame>>(emptyMap())
     val requisitos: StateFlow<Map<String, RequisitosExame>> = _requisitos.asStateFlow()
 
@@ -37,7 +37,7 @@ class MainViewModel : ViewModel() {
                 _tecnicas.clear()
                 _tecnicas.addAll(list)
                 Log.d(TAG, "Técnicas carregadas: ${_tecnicas.size}")
-                _tecnicas.forEach { t -> Log.d(TAG, "tec loaded -> id=${t.id} titulo='${t.titulo}' videoUrl='${t.videoUrl}'") }
+                _tecnicas.forEach { t -> Log.d(TAG, "tec loaded -> id=${t.id} titulo='${t.titulo}' videoUrl='${t.videoUrl}' imageUrl='${t.imageUrl}'") }
             } catch (e: Exception) {
                 Log.e(TAG, "Erro ao carregar tecnicas: ${e.message}", e)
             }
@@ -62,7 +62,6 @@ class MainViewModel : ViewModel() {
         _requisitos.value = copy
     }
 
-    // busca snippet do youtube
     suspend fun fetchVideoSnippet(videoId: String): Snippet? {
         if (videoId.isBlank()) return null
         return try {
@@ -76,18 +75,20 @@ class MainViewModel : ViewModel() {
 
 
     suspend fun fetchTecnicaById(id: String): Tecnica? {
+        Log.d(TAG, "fetchTecnicaById: solicitando id=$id")
         try {
             val t = FirestoreRepo.fetchTecnicaById(id)
+            Log.d(TAG, "fetchTecnicaById: recebido do repo -> $t")
             if (t != null) {
-                // atualiza lista no main thread via scope
                 viewModelScope.launch {
                     val idx = _tecnicas.indexOfFirst { it.id == t.id }
+                    Log.d(TAG, "fetchTecnicaById: idx=$idx antes -> ${if (idx >= 0) _tecnicas[idx] else "nao-existente"}")
                     if (idx >= 0) {
                         _tecnicas[idx] = t
-                        Log.d(TAG, "fetchTecnicaById: substituiu técnica index=$idx id=${t.id} videoUrl='${t.videoUrl}'")
+                        Log.d(TAG, "fetchTecnicaById: substituiu técnica index=$idx id=${t.id} videoUrl='${t.videoUrl}' imageUrl='${t.imageUrl}'")
                     } else {
                         _tecnicas.add(t)
-                        Log.d(TAG, "fetchTecnicaById: adicionou técnica id=${t.id} videoUrl='${t.videoUrl}'")
+                        Log.d(TAG, "fetchTecnicaById: adicionou técnica id=${t.id} videoUrl='${t.videoUrl}' imageUrl='${t.imageUrl}'")
                     }
                 }
             } else {
@@ -97,6 +98,18 @@ class MainViewModel : ViewModel() {
         } catch (e: Exception) {
             Log.e(TAG, "Erro fetchTecnicaById: ${e.message}", e)
             return null
+        }
+    }
+
+
+    suspend fun fetchKataSequence(kataId: String): List<Map<String, String>>? {
+        return try {
+            val seq = FirestoreRepo.fetchKataSequence(kataId)
+            android.util.Log.d(TAG, "fetchKataSequence($kataId) -> size=${seq?.size ?: "null"}")
+            seq
+        } catch (e: Exception) {
+            android.util.Log.e(TAG, "Erro fetchKataSequence: ${e.message}", e)
+            null
         }
     }
 }

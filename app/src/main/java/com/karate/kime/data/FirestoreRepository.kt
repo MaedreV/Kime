@@ -1,3 +1,4 @@
+// app/src/main/java/com/karate/kime/data/FirestoreRepo.kt
 package com.karate.kime.data
 
 import android.util.Log
@@ -9,10 +10,16 @@ import kotlinx.coroutines.tasks.await
 
 private const val TAG = "FirestoreRepo"
 
+private fun normalizeKey(key: String?): String {
+    if (key == null) return ""
+    return key.trim().lowercase().replace(Regex("[^a-z0-9]"), "")
+}
+
 object FirestoreRepo {
     private val db = Firebase.firestore
     private const val TECNICAS_COLL = "Técnicas"
     private const val REQUISITOS_COLL = "requisitos"
+    private const val KATAS_COLL = "Katas" // se você usar outra coleção, ajuste aqui
 
     suspend fun fetchTecnicas(): List<Tecnica> {
         Log.d(TAG, "fetchTecnicas: lendo coleção $TECNICAS_COLL")
@@ -21,24 +28,28 @@ object FirestoreRepo {
         return snapshot.documents.mapNotNull { doc ->
             try {
                 Log.d(TAG, "DOC RAW (${doc.id}) -> ${doc.data}")
-                val id = doc.id
-                val titulo = (doc.get("titulo") ?: doc.getString("titulo"))?.toString()
+                val raw = doc.data ?: emptyMap<String, Any?>()
+                val normalized: Map<String, Any?> = raw.entries.associate { (k, v) ->
+                    normalizeKey(k) to v
+                }
+
+                val titulo = (normalized["titulo"] ?: normalized["title"])?.toString()
                     ?: run {
-                        Log.w(TAG, "Documento $id sem campo 'titulo', ignorando")
+                        Log.w(TAG, "Documento ${doc.id} sem campo 'titulo', ignorando")
                         return@mapNotNull null
                     }
-                val descricao = (doc.get("descricao") ?: doc.getString("descricao"))?.toString() ?: ""
-                val videoUrl = (doc.get("videoUrl") ?: doc.getString("videoUrl") ?: doc.get("videoURL") ?: doc.getString("videoURL") ?: doc.get("videourl"))?.toString()
-                    ?: ""
-                val imageUrl = (doc.get("imageUrl") ?: doc.getString("imageUrl") ?: doc.get("imageURL"))?.toString() ?: ""
+                val descricao = (normalized["descricao"] ?: normalized["description"] ?: "")?.toString() ?: ""
+                val videoUrl = (normalized["videourl"] ?: "")?.toString() ?: ""
+                val imageUrl = (normalized["imageurl"] ?: normalized["image_url"] ?: "")?.toString() ?: ""
 
-                Log.d(TAG, "Documento mapeado -> id=$id titulo='$titulo' videoUrl='$videoUrl' imageUrl='$imageUrl'")
+                Log.d(TAG, "Documento mapeado -> id=${doc.id} titulo='$titulo' videoUrl='$videoUrl' imageUrl='$imageUrl'")
 
                 Tecnica(
-                    id = id,
+                    id = doc.id,
                     titulo = titulo,
                     descricao = descricao,
-                    videoUrl = videoUrl
+                    videoUrl = videoUrl,
+                    imageUrl = imageUrl
                 )
             } catch (e: Exception) {
                 Log.e(TAG, "Erro ao mapear doc ${doc.id}: ${e.message}", e)
@@ -52,12 +63,15 @@ object FirestoreRepo {
         val list = snapshot.documents.mapNotNull { doc ->
             try {
                 Log.d(TAG, "REQ RAW (${doc.id}) -> ${doc.data}")
+                val raw = doc.data ?: emptyMap<String, Any?>()
+                val normalized = raw.entries.associate { (k, v) -> normalizeKey(k) to v }
+
                 val faixaId = doc.id
-                val nome = doc.getString("nome") ?: faixaId
-                val cor = doc.getString("cor") ?: "#FFFFFF"
-                val kihon = (doc.get("kihon") as? List<*>)?.mapNotNull { it as? String } ?: emptyList()
-                val kata = (doc.get("kata") as? List<*>)?.mapNotNull { it as? String } ?: emptyList()
-                RequisitosExame(faixaId = faixaId, nome = nome, cor = cor, kihon = kihon, kata = kata)
+                val nome = (normalized["nome"] ?: normalized["name"] ?: faixaId)?.toString() ?: faixaId
+                val cor = (normalized["cor"] ?: "#FFFFFF")?.toString() ?: "#FFFFFF"
+                val kihonRaw = (normalized["kihon"] as? List<*>)?.mapNotNull { it as? String } ?: emptyList()
+                val kataRaw = (normalized["kata"] as? List<*>)?.mapNotNull { it as? String } ?: emptyList()
+                RequisitosExame(faixaId = faixaId, nome = nome, cor = cor, kihon = kihonRaw, kata = kataRaw)
             } catch (e: Exception) {
                 Log.e(TAG, "Erro ao mapear requisito ${doc.id}: ${e.message}", e)
                 null
@@ -73,10 +87,13 @@ object FirestoreRepo {
             return null
         }
         Log.d(TAG, "REQ BY ID RAW (${doc.id}) -> ${doc.data}")
-        val nome = doc.getString("nome") ?: faixaId
-        val cor = doc.getString("cor") ?: "#FFFFFF"
-        val kihon = (doc.get("kihon") as? List<*>)?.mapNotNull { it as? String } ?: emptyList()
-        val kata = (doc.get("kata") as? List<*>)?.mapNotNull { it as? String } ?: emptyList()
+        val raw = doc.data ?: emptyMap<String, Any?>()
+        val normalized = raw.entries.associate { (k, v) -> normalizeKey(k) to v }
+
+        val nome = (normalized["nome"] ?: normalized["name"] ?: faixaId)?.toString() ?: faixaId
+        val cor = (normalized["cor"] ?: "#FFFFFF")?.toString() ?: "#FFFFFF"
+        val kihon = (normalized["kihon"] as? List<*>)?.mapNotNull { it as? String } ?: emptyList()
+        val kata = (normalized["kata"] as? List<*>)?.mapNotNull { it as? String } ?: emptyList()
         return RequisitosExame(faixaId = faixaId, nome = nome, cor = cor, kihon = kihon, kata = kata)
     }
 
@@ -88,15 +105,70 @@ object FirestoreRepo {
                 return null
             }
             Log.d(TAG, "fetchTecnicaById RAW (${doc.id}) -> ${doc.data}")
-            val titulo = (doc.get("titulo") ?: doc.getString("titulo"))?.toString() ?: ""
-            val descricao = (doc.get("descricao") ?: doc.getString("descricao"))?.toString() ?: ""
-            val videoUrl = (doc.get("videoUrl") ?: doc.getString("videoUrl") ?: doc.get("videoURL") ?: doc.getString("videoURL") ?: doc.get("videourl"))?.toString() ?: ""
-            val imageUrl = (doc.get("imageUrl") ?: doc.getString("imageUrl"))?.toString() ?: ""
+            val raw = doc.data ?: emptyMap<String, Any?>()
+            val normalized = raw.entries.associate { (k, v) -> normalizeKey(k) to v }
+            Log.d(TAG, "fetchTecnicaById NORMALIZED (${doc.id}) -> keys=${normalized.keys}")
+
+            val titulo = (normalized["titulo"] ?: normalized["title"])?.toString() ?: ""
+            val descricao = (normalized["descricao"] ?: normalized["description"])?.toString() ?: ""
+            val videoUrl = (normalized["videourl"] ?: "")?.toString() ?: ""
+            val imageUrl = (normalized["imageurl"] ?: normalized["image_url"] ?: "")?.toString() ?: ""
+
             Log.d(TAG, "fetchTecnicaById: id=${doc.id} titulo='$titulo' videoUrl='$videoUrl' imageUrl='$imageUrl'")
-            return Tecnica(id = doc.id, titulo = titulo, descricao = descricao, videoUrl = videoUrl)
+            return Tecnica(id = doc.id, titulo = titulo, descricao = descricao, videoUrl = videoUrl, imageUrl = imageUrl)
         } catch (e: Exception) {
             Log.e(TAG, "Erro fetchTecnicaById($id): ${e.message}", e)
             return null
+        }
+    }
+
+
+    suspend fun fetchKataSequence(kataId: String): List<Map<String, String>>? {
+        suspend fun parseSequenceFromDoc(coll: String, docId: String): List<Map<String,String>>? {
+            val doc = db.collection(coll).document(docId).get().await()
+            if (!doc.exists()) {
+                Log.d(TAG, "fetchKataSequence: documento $docId NÃO existe em $coll")
+                return null
+            }
+            Log.d(TAG, "fetchKataSequence RAW ($coll/$docId) -> ${doc.data}")
+            val rawList = doc.get("sequence") as? List<*>
+            if (rawList == null) {
+                Log.d(TAG, "fetchKataSequence: campo 'sequence' ausente em $coll/$docId")
+                return emptyList()
+            }
+
+            val mapped = rawList.mapNotNull { item ->
+                when (item) {
+                    is String -> mapOf("techid" to item)
+                    is Map<*, *> -> {
+                        item.mapNotNull { (k, v) ->
+                            val key = k?.toString() ?: return@mapNotNull null
+                            key.lowercase().replace(Regex("[^a-z0-9]"), "") to (v?.toString() ?: "")
+                        }.toMap()
+                    }
+                    else -> null
+                }
+            }
+            Log.d(TAG, "fetchKataSequence: parsed size=${mapped.size} from $coll/$docId")
+            return mapped
+        }
+
+        return try {
+            val fromTecnicas = parseSequenceFromDoc(TECNICAS_COLL, kataId)
+            if (fromTecnicas != null && fromTecnicas.isNotEmpty()) {
+                Log.d(TAG, "fetchKataSequence: encontrou sequence em $TECNICAS_COLL/$kataId")
+                return fromTecnicas
+            }
+            val fromKatas = parseSequenceFromDoc(KATAS_COLL, kataId)
+            if (fromKatas != null) {
+                Log.d(TAG, "fetchKataSequence: resultado de $KATAS_COLL/$kataId size=${fromKatas.size}")
+                return fromKatas
+            }
+            Log.d(TAG, "fetchKataSequence: não encontrou sequence em nenhuma coleção para id=$kataId")
+            emptyList()
+        } catch (e: Exception) {
+            Log.e(TAG, "Erro fetchKataSequence($kataId): ${e.message}", e)
+            null
         }
     }
 }
