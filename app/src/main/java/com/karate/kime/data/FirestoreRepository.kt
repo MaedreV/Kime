@@ -19,7 +19,9 @@ object FirestoreRepo {
     private val db = Firebase.firestore
     private const val TECNICAS_COLL = "Técnicas"
     private const val REQUISITOS_COLL = "requisitos"
-    private const val KATAS_COLL = "Katas" // se você usar outra coleção, ajuste aqui
+    private const val KATAS_COLL = "Katas"
+    private const val USERS_COLL = "users"
+
 
     suspend fun fetchTecnicas(): List<Tecnica> {
         Log.d(TAG, "fetchTecnicas: lendo coleção $TECNICAS_COLL")
@@ -168,6 +170,36 @@ object FirestoreRepo {
             emptyList()
         } catch (e: Exception) {
             Log.e(TAG, "Erro fetchKataSequence($kataId): ${e.message}", e)
+            null
+        }
+    }
+
+    suspend fun saveUser(id: String, nome: String, email: String): Boolean {
+        return try {
+            val map = mapOf("nome" to nome, "email" to email)
+            db.collection(USERS_COLL).document(id).set(map).await()
+            Log.d(TAG, "saveUserProfile: salvo id=$id name='$nome'")
+            true
+        } catch (e: Exception) {
+            Log.e(TAG, "Erro saveUserProfile: ${e.message}", e)
+            false
+        }
+    }
+
+    suspend fun fetchUser(id: String): com.karate.kime.model.User? {
+        return try {
+            val doc = db.collection(USERS_COLL).document(id).get().await()
+            if (!doc.exists()) {
+                Log.w(TAG, "fetchUserProfile: id=$id não encontrado")
+                return null
+            }
+            val raw = doc.data ?: emptyMap<String,Any?>()
+            val nome = (raw["nome"] ?: "").toString()
+            val email = (raw["email"] ?: "").toString()
+            Log.d(TAG, "fetchUserProfile: id=$id -> nome='$nome' email='$email'")
+            com.karate.kime.model.User(id = id, nome = nome, email = email)
+        } catch (e: Exception) {
+            Log.e(TAG, "Erro fetchUserProfile: ${e.message}", e)
             null
         }
     }

@@ -14,7 +14,9 @@ import com.karate.kime.screens.ExamesScreen
 import com.karate.kime.screens.HomeScreen
 import com.karate.kime.screens.KataDetalheScreen
 import com.karate.kime.screens.KihonDetalheScreen
+import com.karate.kime.screens.LoginScreen
 import com.karate.kime.screens.PerfilScreen
+import com.karate.kime.screens.RegisterScreen
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -70,6 +72,9 @@ fun MainNavHost(navController: NavHostController, vm: MainViewModel) {
                 navController = navController
             )
         }
+
+        composable("login") { LoginScreen(vm, navController) }
+        composable("register") { RegisterScreen(vm, navController) }
 
     }
 }
